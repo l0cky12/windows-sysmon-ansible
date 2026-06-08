@@ -1,0 +1,15 @@
+# Real inventories and credentials
+inventory.ini
+group_vars/windows.yml
+
+# Ansible runtime files
+*.retry
+.ansible/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/

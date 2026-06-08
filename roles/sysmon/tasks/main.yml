@@ -1,0 +1,100 @@
+---
+# Install / update Sysmon for defensive endpoint monitoring.
+#
+# Logic:
+#   * Always download the Sysmon ZIP and the config XML.
+#   * Extract binaries to sysmon_install_dir.
+#   * If the Sysmon service is not present -> install with config.
+#   * If it is already present -> refresh the config (-c) in place.
+
+- name: Ensure download directory exists
+  ansible.windows.win_file:
+    path: "{{ sysmon_download_dir }}"
+    state: directory
+
+- name: Ensure Sysmon install directory exists
+  ansible.windows.win_file:
+    path: "{{ sysmon_install_dir }}"
+    state: directory
+
+- name: Download Sysmon ZIP from Sysinternals
+  ansible.windows.win_get_url:
+    url: "{{ sysmon_zip_url }}"
+    dest: "{{ sysmon_download_dir }}\\Sysmon.zip"
+    force: true
+  register: sysmon_zip_download
+
+- name: Extract Sysmon to install directory
+  community.windows.win_unzip:
+    src: "{{ sysmon_download_dir }}\\Sysmon.zip"
+    dest: "{{ sysmon_install_dir }}"
+    creates: "{{ sysmon_install_dir }}\\{{ sysmon_binary }}"
+
+- name: Download Sysmon configuration XML
+  ansible.windows.win_get_url:
+    url: "{{ sysmon_config_url }}"
+    dest: "{{ sysmon_config_path }}"
+    force: true
+  register: sysmon_config_download
+
+- name: Check whether the Sysmon service is already installed
+  ansible.windows.win_service_info:
+    name: "{{ sysmon_service_name }}"
+  register: sysmon_service
+  failed_when: false
+
+- name: Install Sysmon and accept EULA (first-time install)
+  ansible.windows.win_command: >-
+    "{{ sysmon_install_dir }}\{{ sysmon_binary }}" -accepteula
+    -i "{{ sysmon_config_path }}"
+  args:
+    chdir: "{{ sysmon_install_dir }}"
+  when: not (sysmon_service.exists | default(false))
+  register: sysmon_install
+  changed_when: sysmon_install.rc == 0
+
+- name: Update Sysmon configuration (already installed)
+  ansible.windows.win_command: >-
+    "{{ sysmon_install_dir }}\{{ sysmon_binary }}"
+    -c "{{ sysmon_config_path }}"
+  args:
+    chdir: "{{ sysmon_install_dir }}"
+  when: sysmon_service.exists | default(false)
+  register: sysmon_update
+  changed_when: sysmon_update.rc == 0
+
+- name: Ensure the Sysmon service is running and starts at boot
+  ansible.windows.win_service:
+    name: "{{ sysmon_service_name }}"
+    start_mode: auto
+    state: started
+
+# --- Optional, opt-in Wazuh agent integration ---------------------------
+# Disabled by default. When sysmon_configure_wazuh is true this appends a
+# localfile block so the Wazuh agent forwards the Sysmon eventchannel.
+# See README for the manual (recommended) approach.
+
+- name: Check for Wazuh agent ossec.conf
+  ansible.windows.win_stat:
+    path: "{{ sysmon_wazuh_ossec_conf }}"
+  register: wazuh_ossec_stat
+  when: sysmon_configure_wazuh | bool
+
+- name: Ensure Wazuh agent collects the Sysmon eventchannel
+  community.windows.win_lineinfile:
+    path: "{{ sysmon_wazuh_ossec_conf }}"
+    insertbefore: '</ossec_config>'
+    line: "  <localfile><location>{{ sysmon_wazuh_channel }}</location><log_format>eventchannel</log_format></localfile>"
+    backup: true
+  register: wazuh_localfile
+  when:
+    - sysmon_configure_wazuh | bool
+    - wazuh_ossec_stat.stat.exists | default(false)
+
+- name: Restart Wazuh agent to apply eventchannel change
+  ansible.windows.win_service:
+    name: WazuhSvc
+    state: restarted
+  when:
+    - sysmon_configure_wazuh | bool
+    - wazuh_localfile.changed | default(false)

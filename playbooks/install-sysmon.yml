@@ -1,0 +1,16 @@
+---
+# Install and configure Sysmon on Windows Server(s) for defensive
+# endpoint monitoring. Idempotent: installs Sysmon if absent, refreshes
+# the configuration if already installed.
+#
+# Run:
+#   ansible-playbook -i inventory.ini playbooks/install-sysmon.yml
+#
+# Check mode (no changes made):
+#   ansible-playbook -i inventory.ini playbooks/install-sysmon.yml --check
+
+- name: Deploy Sysmon for endpoint monitoring
+  hosts: windows
+  gather_facts: true
+  roles:
+    - sysmon

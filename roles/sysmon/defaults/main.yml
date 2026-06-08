@@ -1,0 +1,30 @@
+---
+# Defaults for the sysmon role. Override in group_vars/host_vars as needed.
+
+# --- Download sources ---------------------------------------------------
+# Official Sysinternals Sysmon distribution (ZIP).
+sysmon_zip_url: "https://download.sysinternals.com/files/Sysmon.zip"
+
+# Sysmon configuration XML. Defaults to the Wazuh-maintained config used
+# for process-injection detection. Point this at your own vetted config
+# (e.g. a fork of SwiftOnSecurity/sysmon-config) for production.
+sysmon_config_url: "https://wazuh.com/resources/blog/detecting-process-injection-with-wazuh/sysmonconfig.xml"
+
+# --- Install paths ------------------------------------------------------
+sysmon_install_dir: 'C:\Program Files\Sysmon'
+sysmon_download_dir: 'C:\Windows\Temp\sysmon-deploy'
+sysmon_config_path: 'C:\Program Files\Sysmon\sysmonconfig.xml'
+
+# 64-bit binary name. Use 'Sysmon.exe' for 32-bit-only hosts.
+sysmon_binary: 'Sysmon64.exe'
+
+# The Windows service Sysmon registers as. Used to detect prior installs.
+sysmon_service_name: 'Sysmon64'
+
+# --- Wazuh integration (documentation / opt-in only) --------------------
+# By default this role does NOT touch the Wazuh agent config. It only
+# tells you what to add (see README). Set the toggle to true to let the
+# role append the Sysmon eventchannel localfile block to ossec.conf.
+sysmon_configure_wazuh: false
+sysmon_wazuh_ossec_conf: 'C:\Program Files (x86)\ossec-agent\ossec.conf'
+sysmon_wazuh_channel: 'Microsoft-Windows-Sysmon/Operational'

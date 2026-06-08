@@ -1,0 +1,26 @@
+---
+# Example connection + credential variables for the [windows] group.
+#
+# Copy to group_vars/windows.yml and edit:
+#   cp group_vars/windows.example.yml group_vars/windows.yml
+#
+# SECURITY: Do not commit real credentials. Encrypt this file with
+# Ansible Vault once you fill it in:
+#   ansible-vault encrypt group_vars/windows.yml
+
+# --- WinRM connection ---------------------------------------------------
+ansible_connection: winrm
+ansible_user: Administrator
+ansible_password: "CHANGE_ME"          # better: store in Vault
+ansible_port: 5986
+ansible_winrm_transport: ntlm          # or kerberos / credssp / basic
+
+# For lab/self-signed certs over HTTPS. Use 'validate' with a trusted
+# cert in production.
+ansible_winrm_server_cert_validation: ignore
+
+# --- Sysmon overrides (optional) ----------------------------------------
+# Anything in roles/sysmon/defaults/main.yml can be overridden here.
+# For example, to pin a specific config source:
+#
+# sysmon_config_url: "https://wazuh.com/resources/blog/detecting-process-injection-with-wazuh/sysmonconfig.xml"
