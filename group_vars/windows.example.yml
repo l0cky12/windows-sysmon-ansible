@@ -11,7 +11,7 @@
 # --- WinRM connection ---------------------------------------------------
 ansible_connection: winrm
 ansible_user: Administrator
-ansible_password: "CHANGE_ME"          # better: store in Vault
+ansible_password: "Violet-River-72!Lantern#Cloud"  # fake/example password; replace and encrypt with Vault
 ansible_port: 5986
 ansible_winrm_transport: ntlm          # or kerberos / credssp / basic
 
