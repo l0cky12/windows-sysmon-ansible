@@ -12,11 +12,12 @@
 ansible_connection: winrm
 ansible_user: Administrator
 ansible_password: "Violet-River-72!Lantern#Cloud"  # fake/example password; replace and encrypt with Vault
-ansible_port: 5986
+ansible_port: 5985
+ansible_winrm_scheme: http
 ansible_winrm_transport: ntlm          # or kerberos / credssp / basic
 
-# For lab/self-signed certs over HTTPS. Use 'validate' with a trusted
-# cert in production.
+# For HTTPS with lab/self-signed certs, you may need this set to ignore.
+# For HTTP, this setting is harmless but not used.
 ansible_winrm_server_cert_validation: ignore
 
 # --- Sysmon overrides (optional) ----------------------------------------
